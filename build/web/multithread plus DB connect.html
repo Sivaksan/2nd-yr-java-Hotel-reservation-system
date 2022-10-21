@@ -1,0 +1,64 @@
+<--<!-- Multi Thread and DB connection -->
+public class DBConnection {
+
+    private final String url;
+    private final String user;
+    private final String pass;
+    private static DBConnection jdbc;
+    Connection con = null;
+
+    private DBConnection() {
+        Properties prop = new Properties();
+
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream inputStream = classLoader.getResourceAsStream("config.properties");
+            prop.load(inputStream);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        url = prop.getProperty("url", "");
+        user = prop.getProperty("username", "");
+        pass = prop.getProperty("password", "");
+    }
+
+    public static DBConnection getInstance() {
+        if (jdbc == null) {
+            synchronized (DBConnection.class) {
+                if (jdbc == null) {
+                    jdbc = new DBConnection();
+                }
+            }
+        }
+        return jdbc;
+    }
+
+    public Connection openConnection() {
+        try {
+
+            Class.forName("com.mysql.jdbc.Driver");
+
+            //connect to DB
+            con = DriverManager.getConnection(url, user, pass);
+
+            System.out.println(con);
+            return con;
+
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+
+        }
+        return null;
+    }
+
+    public void closeConnection() {
+        try {
+
+            con.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+}
